@@ -1,0 +1,26 @@
+<html>
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+</head>
+<body>
+	<form action="/login" method="post">
+		<input type="text" name="number" id="number" />
+		<input type="button" id="send" value="connect" />
+	</form>
+	<script type="text/javascript">
+		function submitData(e){
+			e.preventDefault();
+			$.get("/login",{number:$('#number')[0].value},function (data) { 
+					if(data!==''){
+						console.log("ok")
+						location.href="/novnc/vnc_auto.html?host=127.0.0.1&port=8192"//+window.location+"/echo";
+					} else{
+						alert("There is no server with such number!")
+					}
+				})
+		}
+		$('#send').on('click', submitData);
+			
+	</script>
+</body>
+</html>
