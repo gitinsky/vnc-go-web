@@ -12,10 +12,13 @@
 			e.preventDefault();
 			$.get("/login",{number:$('#number')[0].value},function (data) { 
 					if(data!==''){
-						console.log("ok")
-						location.href="/novnc/vnc_auto.html?host=127.0.0.1&port=8192"//+window.location+"/echo";
+						console.log("ok");
+						console.log("coolies");
+						console.log(document.cookie);
+						document.cookie = "userName=Vasya";
+						location.href="/novnc/vnc_auto.html?host="+window.location.href.split("//")[1]+"&port=443"
 					} else{
-						alert("There is no server with such number!")
+						alert("There is no server with such number!");
 					}
 				})
 		}
