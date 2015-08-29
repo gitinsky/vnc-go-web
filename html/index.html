@@ -1,29 +1,38 @@
 <html>
-<head>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-</head>
-<body>
-	<form action="/login" method="post">
-		<input type="text" name="number" id="number" />
-		<input type="button" id="send" value="connect" />
-	</form>
-	<script type="text/javascript">
-		function submitData(e){
-			e.preventDefault();
-			$.get("/login",{number:$('#number')[0].value},function (data) { 
-					if(data!==''){
-						console.log("ok");
-						console.log("coolies");
-						console.log(document.cookie);
-						document.cookie = "userName=Vasya";
-						location.href="/novnc/vnc_auto.html?host="+window.location.href.split("//")[1]+"&port=443"
-					} else{
-						alert("There is no server with such number!");
-					}
-				})
-		}
-		$('#send').on('click', submitData);
-			
-	</script>
-</body>
+ <head>
+  <title>VNC-go-Web login page</title>
+ </head>
+ <body>
+  <form action="/" method="post">
+   <table width="100%" height="90%">
+    <tr valign="center">
+     <td align="center">
+      <table border="1">
+       <tr>
+        <td>
+         <table>
+          <tr>
+           <td>
+            Номер сервера
+           </td>
+           <td>
+            <input type="text" name="servernum"/>
+           </td>
+          </tr>
+           <td>
+            &nbsp;
+           </td>
+           <td>
+            <input type="submit" value="connect" />
+           </td>
+          </tr>
+         </table>
+        </td>
+       </tr>
+      </table>
+     </td>
+    </tr>
+   </table>
+  </form>
+ </body>
 </html>
