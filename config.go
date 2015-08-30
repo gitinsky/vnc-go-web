@@ -19,8 +19,8 @@ var cfg = Config{
     listen: flag.String("listen", ":8080", "Address to HTTP(S) listen. [ADDR]:PORT"),
 	ssl:    flag.Bool("ssl", false, "Use SSL"),
 	root:   flag.String("root", "./", "Document root for static pages"),
-    auth:   flag.String("auth", "https://contentdelivery.mf-master.ru:8443/api/?method=get_uuid&server_name=", "External authentication URL"),
-    resolv: flag.String("resolv", "http://172.23.0.1:8080/cgi-bin/uuid2ip.cgi?", "External ID to IP resolving URL"),
+    auth:   flag.String("auth", "http://127.0.0.1/auth?", "External authentication URL"),
+    resolv: flag.String("resolv", "http://127.0.0.1/resolv?", "External ID to IP resolving URL"),
 }
 
 func (*Config) Parse() {
