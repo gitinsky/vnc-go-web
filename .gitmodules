@@ -1,0 +1,3 @@
+[submodule "html/noVNC"]
+	path = html/noVNC
+	url = https://github.com/kanaka/noVNC
