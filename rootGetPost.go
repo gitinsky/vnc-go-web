@@ -24,16 +24,16 @@ type RootGetPost struct {
 }
 
 func (h RootGetPost) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    resp := Responder{w, r, time.Now()}
+    p := Responder{w, r, time.Now()}
     switch r.Method {
         case "GET":
             h.fs.ServeHTTP(w, r)
-            resp.accessLog(http.StatusOK)
+            p.accessLog(http.StatusOK)
         case "POST":
-            resp.serveLogin()
+            p.serveLogin()
         default:
             http.Error(w, "GET or POST!", http.StatusMethodNotAllowed)
-            resp.errorLog(http.StatusMethodNotAllowed, "Method not allowed")
+            p.errorLog(http.StatusMethodNotAllowed, "Method not allowed")
     }
 }
 

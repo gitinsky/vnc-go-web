@@ -3,7 +3,13 @@
   <title>VNC-go-Web login page</title>
  </head>
  <body>
-  <form action="/" method="post" target="_blank">
+  <script type="text/javascript">
+  function OnSubmitForm() {
+   document.retry_form.action = document.retry_form.action + location.search;
+   return true;
+  }
+  </script>
+  <form name="retry_form" action="/retry" method="post">
    <table width="100%" height="90%">
     <tr valign="center">
      <td align="center">
@@ -12,11 +18,13 @@
         <td>
          <table>
           <tr>
-           <td>
-            Номер сервера
+           <td colspan="2" align="center">
+            <b>Сервер недоступен<br/>Попробуете еще раз?</b>
            </td>
-           <td>
-            <input type="password" name="servernum"/>
+          </tr>
+          <tr>
+           <td colspan="2" align="center">
+            &nbsp;
            </td>
           </tr>
           <tr>

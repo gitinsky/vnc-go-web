@@ -2,11 +2,13 @@ package main // github.com/gitinsky/vnc-go-web
 
 import (
 	"net/http"
+    "encoding/base64"
     "net/url"
     "strings"
     "crypto/tls"
     "io"
     "io/ioutil"
+    "fmt"
 )
 
 func (p *Responder) serveLogin() {
@@ -19,7 +21,7 @@ func (p *Responder) serveLogin() {
         return
     }
     
-    serverID, serverIP, err := getServerIP(serverNum)
+    serverID, serverIP, err := getServerIPbyNum(serverNum)
     
     if err != nil {
         http.Redirect(p.w, p.r, "/panic.html", http.StatusFound)
@@ -27,14 +29,37 @@ func (p *Responder) serveLogin() {
         return
     }
     
-    if serverIP == "" {
+    if serverID == "" {
         http.Redirect(p.w, p.r, "/error.html", http.StatusFound)
+        p.errorLog(http.StatusFound, "error resolving '%s' ('%s', '%s'): server not found", serverNum, serverID, serverIP)
+        return
+    }
+    
+    if serverIP == "" {
+        http.Redirect(p.w, p.r, "/retry.html?"+p.GetAuthToken("retry", serverID), http.StatusFound)
         p.errorLog(http.StatusFound, "error resolving '%s' ('%s', '%s'): server offline", serverNum, serverID, serverIP)
         return
     }
     
-    http.Redirect(p.w, p.r, "/ok.html", http.StatusFound)
+    http.Redirect(p.w, p.r, p.GetVncUrl(serverIP), http.StatusFound)
     p.errorLog(http.StatusFound, "resolved '%s' ('%s', '%s')", serverNum, serverID, serverIP)
+}
+
+func (p *Responder) GetVncUrl(serverIP string) string {
+    return fmt.Sprintf(
+        "/noVNC/vnc_auto.html?title=%s&true_color=%s&cursor=%s&shared=%s&view_only=%s&path=%s",
+        url.QueryEscape(serverIP),
+        ternary(*cfg.vnc_true_color, "true", "false").(string),
+        ternary(*cfg.vnc_local_cursor, "true", "false").(string),
+        ternary(*cfg.vnc_shared, "true", "false").(string),
+        ternary(*cfg.vnc_view_only, "true", "false").(string),
+        url.QueryEscape("websockify?"+p.GetAuthToken("dest", serverIP)),
+    )
+}
+
+
+func (p *Responder) GetAuthToken(dest string, serverIP string) string {
+    return base64.URLEncoding.EncodeToString(slidingPassword.Encrypt(fmt.Sprintf("peer %s real %s %s %s:%d", p.r.RemoteAddr, p.getHeader("X-Real-IP", "UNKNOWN"), dest, serverIP, *cfg.vnc_port)))
 }
 
 
@@ -55,24 +80,33 @@ func getServerID(serverNum string) (string, error) {
     return strings.Trim(string(buf), " \r\n"), nil
 }
 
-func getServerIP(serverNum string) (string, string, error) {
-    serverID, err := getServerID(serverNum)
-    if serverID == "" {
-        return "", "", err
-    }
-    
+func getServerIP(serverID string) (string, error) {
     resp, err := http.Get(*cfg.resolv+url.QueryEscape(serverID))
     if err != nil {
-        return serverID, "", err
+        return "", err
     }
     defer resp.Body.Close()
 
     buf, err := ioutil.ReadAll(io.LimitReader(resp.Body, 256))
     if err != nil && err != io.EOF {
+        return "", err
+    }
+
+    return strings.Trim(string(buf), " \r\n"), nil
+}
+
+func getServerIPbyNum(serverNum string) (string, string, error) {
+    serverID, err := getServerID(serverNum)
+    if serverID == "" {
+        return "", "", err
+    }
+    
+    serverIP, err := getServerIP(serverID)
+    if serverIP == "" {
         return serverID, "", err
     }
 
-    return serverID,  strings.Trim(string(buf), " \r\n"), nil
+    return serverID, serverIP, nil
 }
 
 

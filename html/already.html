@@ -1,0 +1,64 @@
+<html>
+ <head>
+  <title>VNC-go-Web login page</title>
+ </head>
+ <body>
+   <table width="100%" height="90%">
+    <tr valign="center">
+     <td align="center">
+      <table border="1">
+       <tr>
+        <td>
+         <table>
+          <form action="/websockify" method="get">
+           <tr>
+            <td colspan="2" align="center">
+             <b>Вы уже аутентифицированы<br/>для одного из серверов</b>
+            </td>
+           </tr>
+           <tr>
+            <td>
+             &nbsp;
+            </td>
+            <td align="right">
+             <input type="submit" value="Подключиться" />
+            </td>
+           </tr>
+          </form>
+           <tr>
+            <td colspan="2">
+             &nbsp;
+            </td>
+           </tr>
+           <tr>
+            <td colspan="2" align="center">
+             <b>Подключиться к другому серверу</b>
+            </td>
+           </tr>
+          <form action="/" method="post">
+           <tr>
+            <td>
+             Номер сервера
+            </td>
+            <td>
+             <input type="password" name="servernum"/>
+            </td>
+           </tr>
+           <tr>
+            <td>
+             &nbsp;
+            </td>
+            <td align="right">
+             <input type="submit" value="Подключиться" />
+            </td>
+           </tr>
+          </form>
+         </table>
+        </td>
+       </tr>
+      </table>
+     </td>
+    </tr>
+   </table>
+ </body>
+</html>
