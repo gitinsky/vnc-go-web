@@ -29,11 +29,9 @@ func (h RootGetPost) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         case "GET":
             h.fs.ServeHTTP(w, r)
             p.accessLog(http.StatusOK)
-        case "POST":
-            p.serveLogin()
         default:
-            http.Error(w, "GET or POST!", http.StatusMethodNotAllowed)
-            p.errorLog(http.StatusMethodNotAllowed, "Method not allowed")
+            http.Error(w, r.Method+" not allowed", http.StatusMethodNotAllowed)
+            p.errorLog(http.StatusMethodNotAllowed, "Method '%s' not allowed", r.Method)
     }
 }
 

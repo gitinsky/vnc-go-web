@@ -13,7 +13,7 @@ func (h RetryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     
     dest, serverID := p.CheckAuthToken()
     if dest != "retry" || serverID == "" {
-        http.Redirect(w, r, "/error.html", http.StatusFound)
+        http.Redirect(w, r, *cfg.baseuri+"error.html", http.StatusFound)
         p.errorLog(http.StatusFound, "auth token invalid")
         return
     }
@@ -21,13 +21,13 @@ func (h RetryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     serverIP, err := getServerIP(serverID)
     
     if err != nil {
-        http.Redirect(p.w, p.r, "/panic.html", http.StatusFound)
+        http.Redirect(p.w, p.r, *cfg.baseuri+"panic.html", http.StatusFound)
         p.errorLog(http.StatusFound, "error resolving '%s' ('%s', '%s'): %s", "-", serverID, serverIP, err.Error())
         return
     }
     
     if serverIP == "" {
-        http.Redirect(p.w, p.r, "/retry.html?"+p.GetAuthToken("retry", serverID), http.StatusFound)
+        http.Redirect(p.w, p.r, *cfg.baseuri+"retry.html?"+p.GetAuthToken("retry", serverID), http.StatusFound)
         p.errorLog(http.StatusFound, "error resolving '%s' ('%s', '%s'): server offline", "-", serverID, serverIP)
         return
     }

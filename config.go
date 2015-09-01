@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 const (
@@ -18,6 +19,7 @@ type Config struct {
     auth    *string
     resolv  *string
     authTTL *float64
+    baseuri *string
 
     // VNC server specific parameters
     vnc_port         *int
@@ -34,6 +36,7 @@ var cfg = Config{
     auth:    flag.String("auth", "http://127.0.0.1/auth?", "External authentication URL"),
     resolv:  flag.String("resolv", "http://127.0.0.1/resolv?", "External ID to IP resolving URL"),
     authTTL: flag.Float64("authTTL", 10, "Authentication token TTL in seconds"),
+    baseuri: flag.String("baseuri", "", "Base URI"),
 
     vnc_port:         flag.Int("vnc_port", 5900, "VNC port to connect"),
     vnc_true_color:   flag.Bool("vnc_true_color", false, "true_color noVNC param"),
@@ -42,13 +45,17 @@ var cfg = Config{
     vnc_view_only:    flag.Bool("vnc_view_only", false, "view_only noVNC param"),
 }
 
-func (*Config) Parse() {
+func (cfg *Config) Parse() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage:\n")
 		flag.PrintDefaults()
 	}
 
 	flag.Parse()
+
+    str := strings.Trim(*cfg.baseuri, " \t\r\n/")
+    str = "/"+ str + ternary(len(str) > 0, "/", "").(string)
+    cfg.baseuri = &str
 }
 
 type strList []string

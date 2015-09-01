@@ -16,7 +16,7 @@ func (p *Responder) serveLogin() {
 
     serverNum := strings.Trim(p.r.PostFormValue("servernum"), " \r\n")
     if serverNum == "" {
-        http.Redirect(p.w, p.r, "/error.html", http.StatusFound)
+        http.Redirect(p.w, p.r, *cfg.baseuri+"error.html", http.StatusFound)
         p.errorLog(http.StatusFound, "empty input")
         return
     }
@@ -24,19 +24,19 @@ func (p *Responder) serveLogin() {
     serverID, serverIP, err := getServerIPbyNum(serverNum)
     
     if err != nil {
-        http.Redirect(p.w, p.r, "/panic.html", http.StatusFound)
+        http.Redirect(p.w, p.r, *cfg.baseuri+"panic.html", http.StatusFound)
         p.errorLog(http.StatusFound, "error resolving '%s' ('%s', '%s'): %s", serverNum, serverID, serverIP, err.Error())
         return
     }
     
     if serverID == "" {
-        http.Redirect(p.w, p.r, "/error.html", http.StatusFound)
+        http.Redirect(p.w, p.r, "error.html", http.StatusFound)
         p.errorLog(http.StatusFound, "error resolving '%s' ('%s', '%s'): server not found", serverNum, serverID, serverIP)
         return
     }
     
     if serverIP == "" {
-        http.Redirect(p.w, p.r, "/retry.html?"+p.GetAuthToken("retry", serverID), http.StatusFound)
+        http.Redirect(p.w, p.r, "retry.html?"+p.GetAuthToken("retry", serverID), http.StatusFound)
         p.errorLog(http.StatusFound, "error resolving '%s' ('%s', '%s'): server offline", serverNum, serverID, serverIP)
         return
     }
@@ -46,14 +46,17 @@ func (p *Responder) serveLogin() {
 }
 
 func (p *Responder) GetVncUrl(serverIP string) string {
+    wspath := strings.Trim(*cfg.baseuri, "/")
+    wspath = wspath + ternary(len(wspath) > 0, "/", "").(string)
     return fmt.Sprintf(
-        "/noVNC/vnc_auto.html?title=%s&true_color=%s&cursor=%s&shared=%s&view_only=%s&path=%s",
+        "%snoVNC/vnc_auto.html?title=%s&true_color=%s&cursor=%s&shared=%s&view_only=%s&path=%s",
+        *cfg.baseuri,
         url.QueryEscape(serverIP),
         ternary(*cfg.vnc_true_color, "true", "false").(string),
         ternary(*cfg.vnc_local_cursor, "true", "false").(string),
         ternary(*cfg.vnc_shared, "true", "false").(string),
         ternary(*cfg.vnc_view_only, "true", "false").(string),
-        url.QueryEscape("websockify?"+p.GetAuthToken("dest", serverIP)),
+        url.QueryEscape(wspath+"websockify?"+p.GetAuthToken("dest", serverIP)),
     )
 }
 
