@@ -9,6 +9,7 @@ import (
     "io"
     "io/ioutil"
     "fmt"
+    "net"
 )
 
 func (p *Responder) serveLogin() {
@@ -62,7 +63,7 @@ func (p *Responder) GetVncUrl(serverIP string) string {
 
 
 func (p *Responder) GetAuthToken(dest string, serverIP string) string {
-    return base64.URLEncoding.EncodeToString(slidingPassword.Encrypt(fmt.Sprintf("peer %s real %s %s %s:%d", p.r.RemoteAddr, p.getHeader("X-Real-IP", "UNKNOWN"), dest, serverIP, *cfg.vnc_port)))
+    return base64.URLEncoding.EncodeToString(slidingPassword.Encrypt(fmt.Sprintf("peer %s real %s %s %s:%d", SplitHostPort(p.r.RemoteAddr)[0], p.getHeader("X-Real-IP", "UNKNOWN"), dest, serverIP, *cfg.vnc_port)))
 }
 
 
@@ -113,5 +114,11 @@ func getServerIPbyNum(serverNum string) (string, string, error) {
 }
 
 
-
+func SplitHostPort(hostport string) [2]string {
+    host, port, err := net.SplitHostPort(hostport)
+    if err != nil {
+    	panic(err)
+    }
+	return [2]string{host, port}
+}
 
