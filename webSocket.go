@@ -85,7 +85,7 @@ func bootHandshake(config *websocket.Config, r *http.Request) error {
 	p := Responder{nil, r, time.Now()}
 
 	authToken := p.CheckAuthToken()
-	if authToken.Dest == "" || authToken.Retry != "" {
+	if authToken == nil || authToken.Dest == "" || authToken.Retry != "" {
 		p.errorLog(http.StatusForbidden, "auth token invalid")
 		return fmt.Errorf("auth token invalid")
 	}
