@@ -12,7 +12,7 @@ func (h RetryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p := Responder{w, r, time.Now()}
 
 	authToken := p.CheckAuthToken()
-	if authToken.Dest != "" || authToken.Retry == "" {
+	if authToken == nil || authToken.Dest != "" || authToken.Retry == "" {
 		http.Redirect(w, r, *cfg.baseuri+"error.html", http.StatusFound)
 		p.errorLog(http.StatusFound, "auth token invalid")
 		return
