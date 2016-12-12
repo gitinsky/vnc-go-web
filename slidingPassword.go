@@ -3,21 +3,46 @@ package main // github.com/gitinsky/vnc-go-web
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"github.com/satori/go.uuid"
-	"regexp"
+	"crypto/rand"
+	"encoding/json"
+	"hash/crc32"
 	"sync"
 	"time"
+
+	"github.com/satori/go.uuid"
 )
+
+type EncrData struct {
+	IV   []byte
+	Data []byte
+}
+
+type RawData struct {
+	CSum uint32
+	Data []byte
+}
+
+const (
+	passwdLen = 16
+)
+
+func randStr(strLen int) []byte {
+	buf := make([]byte, strLen)
+	_, err := rand.Read(buf)
+	if err != nil {
+		panic(err)
+	}
+	return buf
+}
 
 type SlidingPassword struct {
 	curPass []byte
 	oldPass []byte
-	iv      []byte
 	lock    sync.RWMutex
 }
 
 func NewSlidingPassword() *SlidingPassword {
-	return &SlidingPassword{curPass: uuidgen(), oldPass: uuidgen(), iv: uuidgen()}
+	return &SlidingPassword{curPass: randStr(passwdLen), oldPass: randStr(passwdLen)}
 }
 
 func (p *SlidingPassword) UpdateLoop(interval time.Duration) {
@@ -31,35 +56,35 @@ func (p *SlidingPassword) Update() {
 	defer p.lock.Unlock()
 	p.lock.Lock()
 	p.oldPass = p.curPass
-	p.curPass = uuidgen()
+	p.curPass = randStr(passwdLen)
 }
 
-func (p *SlidingPassword) GetPasswords() ([]byte, []byte, []byte) {
+func (p *SlidingPassword) GetPasswords() ([]byte, []byte) {
 	defer p.lock.RUnlock()
 	p.lock.RLock()
-	return p.curPass, p.oldPass, p.iv
+	return p.curPass, p.oldPass
 }
 
-func (p *SlidingPassword) Decrypt(msg []byte, check *regexp.Regexp) []string {
-	curPass, oldPass, iv := p.GetPasswords()
+func (p *SlidingPassword) Decrypt(msg []byte) *AuthToken {
+	curPass, oldPass := p.GetPasswords()
 
-	res := check.FindAllStringSubmatch(DecryptAESCFB(msg, curPass, iv), -1)
+	res := DecryptAESCFB(msg, curPass)
 	if res != nil {
-		return res[0]
+		return res
 	}
 
-	res = check.FindAllStringSubmatch(DecryptAESCFB([]byte(msg), oldPass, iv), -1)
+	res = DecryptAESCFB(msg, oldPass)
 	if res != nil {
-		return res[0]
+		return res
 	}
 
 	return nil
 }
 
-func (p *SlidingPassword) Encrypt(msg string) []byte {
-	curPass, _, iv := p.GetPasswords()
+func (p *SlidingPassword) Encrypt(authToken *AuthToken) []byte {
+	curPass, _ := p.GetPasswords()
 
-	return EncryptAESCFB([]byte(msg), curPass, iv)
+	return EncryptAESCFB(authToken, curPass)
 }
 
 func uuidgen() []byte {
@@ -71,23 +96,64 @@ func uuidgen() []byte {
 	return data
 }
 
-func EncryptAESCFB(src, key, iv []byte) []byte {
-	dst := make([]byte, len(src))
+func EncryptAESCFB(src *AuthToken, key []byte) []byte {
+	var err error
+	rawData := RawData{}
 
-	c := cipher.NewCFBEncrypter(aesCipher(key), iv)
-	c.XORKeyStream(dst, src)
+	rawData.Data, err = json.Marshal(src)
+	if err != nil {
+		panic(err)
+	}
+	rawData.CSum = crc32.ChecksumIEEE(rawData.Data)
 
-	//cipher.NewCFBEncrypter(aesCipher(key), iv).XORKeyStream(dst, src)
+	rawBytes, err := json.Marshal(rawData)
+	encrData := EncrData{
+		IV:   randStr(len(key)),
+		Data: make([]byte, len(rawBytes)),
+	}
 
-	return dst
+	cipher.NewCFBEncrypter(aesCipher(key), encrData.IV).XORKeyStream(encrData.Data, rawBytes)
+
+	encrBytes, err := json.Marshal(encrData)
+	if err != nil {
+		panic(err)
+	}
+
+	return encrBytes
 }
 
-func DecryptAESCFB(src, key, iv []byte) string {
-	dst := make([]byte, len(src))
+func DecryptAESCFB(src, key []byte) *AuthToken {
+	encrData := EncrData{}
+	err := json.Unmarshal(src, &encrData)
+	if err != nil {
+		return nil
+	}
 
-	cipher.NewCFBDecrypter(aesCipher(key), iv).XORKeyStream(dst, src)
+	if len(encrData.IV) != len(key) {
+		return nil
+	}
 
-	return string(dst)
+	rawBytes := make([]byte, len(encrData.Data))
+	cipher.NewCFBDecrypter(aesCipher(key), encrData.IV).XORKeyStream(rawBytes, encrData.Data)
+
+	rawData := RawData{}
+	err = json.Unmarshal(rawBytes, &rawData)
+	if err != nil {
+		return nil
+	}
+
+	cSum := crc32.ChecksumIEEE(rawData.Data)
+	if cSum != rawData.CSum {
+		return nil
+	}
+
+	res := AuthToken{}
+	err = json.Unmarshal(rawData.Data, &res)
+	if err != nil {
+		return nil
+	}
+
+	return &res
 }
 
 func aesCipher(key []byte) cipher.Block {

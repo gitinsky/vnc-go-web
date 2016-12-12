@@ -1,23 +1,25 @@
 package main // github.com/gitinsky/vnc-go-web
 
-import (
-	"encoding/base64"
-	"regexp"
-)
+import "encoding/base64"
 
-var checkAuthTokenRegexp = regexp.MustCompile("^peer\\s+([^\\s]+)\\s+real\\s+([^\\s]+)\\s+((?:dest)|(?:retry))\\s+([^\\s]+)$")
+type AuthToken struct {
+	Peer  string `json:"peer,omitempty"`
+	Real  string `json:"real,omitempty"`
+	Dest  string `json:"dest,omitempty"`
+	Retry string `json:"retry,omitempty"`
+}
 
-func (p *Responder) CheckAuthToken() (string, string) {
+func (p *Responder) CheckAuthToken() *AuthToken {
 	if p.r.URL.RawQuery != "" {
 		authStr, _ := base64.URLEncoding.DecodeString(p.r.URL.RawQuery)
 		if authStr != nil {
-			authParams := slidingPassword.Decrypt(authStr, checkAuthTokenRegexp)
+			authParams := slidingPassword.Decrypt(authStr)
 			if authParams != nil {
-				if authParams[1] != p.r.RemoteAddr || authParams[2] != p.getHeader("X-Real-IP", "UNKNOWN") {
-					return authParams[3], authParams[4]
+				if authParams.Peer != p.r.RemoteAddr || authParams.Real != p.getHeader("X-Real-IP", "UNKNOWN") {
+					return authParams
 				}
 			}
 		}
 	}
-	return "", ""
+	return nil
 }

@@ -62,7 +62,19 @@ func (p *Responder) GetVncUrl(serverIP string) string {
 }
 
 func (p *Responder) GetAuthToken(dest string, serverIP string) string {
-	return base64.URLEncoding.EncodeToString(slidingPassword.Encrypt(fmt.Sprintf("peer %s real %s %s %s:%d", SplitHostPort(p.r.RemoteAddr)[0], p.getHeader("X-Real-IP", "UNKNOWN"), dest, serverIP, *cfg.vnc_port)))
+	authToken := AuthToken{
+		Peer: SplitHostPort(p.r.RemoteAddr)[0],
+		Real: p.getHeader("X-Real-IP", "UNKNOWN"),
+	}
+	if dest == "dest" {
+		authToken.Dest = fmt.Sprintf("%s:%d", serverIP, *cfg.vnc_port)
+	} else {
+		authToken.Retry = fmt.Sprintf("%s:%d", serverIP, *cfg.vnc_port)
+	}
+
+	return base64.URLEncoding.EncodeToString(
+		slidingPassword.Encrypt(&authToken),
+	)
 }
 
 func getServerID(serverNum string) (string, error) {

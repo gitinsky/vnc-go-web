@@ -2,12 +2,13 @@ package main // github.com/gitinsky/vnc-go-web
 
 import (
 	"fmt"
-	"golang.org/x/net/websocket"
 	"io"
 	"net"
 	"net/http"
 	"sync"
 	"time"
+
+	"golang.org/x/net/websocket"
 )
 
 type WssVncRequest struct {
@@ -83,15 +84,15 @@ func handleWss(wsconn *websocket.Conn) {
 func bootHandshake(config *websocket.Config, r *http.Request) error {
 	p := Responder{nil, r, time.Now()}
 
-	dest, serverIP := p.CheckAuthToken()
-	if dest != "dest" || serverIP == "" {
+	authToken := p.CheckAuthToken()
+	if authToken.Dest == "" || authToken.Retry != "" {
 		p.errorLog(http.StatusForbidden, "auth token invalid")
 		return fmt.Errorf("auth token invalid")
 	}
 
 	config.Protocol = []string{"binary"}
 
-	r.Header.Set("X-Server-IP", serverIP)
+	r.Header.Set("X-Server-IP", authToken.Dest)
 	r.Header.Set("Access-Control-Allow-Origin", "*")
 	r.Header.Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE")
 

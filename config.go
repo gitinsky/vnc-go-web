@@ -16,6 +16,7 @@ type Config struct {
 	listen  *string
 	ssl     *bool
 	root    *string
+	passwd  *string
 	auth    *string
 	resolv  *string
 	authTTL *float64
@@ -33,6 +34,7 @@ var cfg = Config{
 	listen:  flag.String("listen", ":8080", "Address to HTTP(S) listen. [ADDR]:PORT"),
 	ssl:     flag.Bool("ssl", false, "Use SSL"),
 	root:    flag.String("root", "./", "Document root for static pages"),
+	passwd:  flag.String("passwd", "", "Password file name"),
 	auth:    flag.String("auth", "http://127.0.0.1/auth?", "External authentication URL"),
 	resolv:  flag.String("resolv", "http://127.0.0.1/resolv?", "External ID to IP resolving URL"),
 	authTTL: flag.Float64("authTTL", 10, "Authentication token TTL in seconds"),
