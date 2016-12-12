@@ -17,6 +17,7 @@ type Config struct {
 	ssl     *bool
 	root    *string
 	passwd  *string
+	vnc     *string
 	auth    *string
 	resolv  *string
 	authTTL *float64
@@ -35,6 +36,7 @@ var cfg = Config{
 	ssl:     flag.Bool("ssl", false, "Use SSL"),
 	root:    flag.String("root", "./", "Document root for static pages"),
 	passwd:  flag.String("passwd", "", "Password file name"),
+	vnc:     flag.String("vnc", "", "Address of the VNC server to connect"),
 	auth:    flag.String("auth", "http://127.0.0.1/auth?", "External authentication URL"),
 	resolv:  flag.String("resolv", "http://127.0.0.1/resolv?", "External ID to IP resolving URL"),
 	authTTL: flag.Float64("authTTL", 10, "Authentication token TTL in seconds"),

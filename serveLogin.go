@@ -13,16 +13,39 @@ import (
 )
 
 func (p *Responder) serveLogin() {
-	p.r.ParseForm()
+	var (
+		serverNum string
+		serverID  string
+		serverIP  string
+		err       error
+	)
 
-	serverNum := strings.Trim(p.r.PostFormValue("servernum"), " \r\n")
-	if serverNum == "" {
-		http.Redirect(p.w, p.r, *cfg.baseuri+"error.html", http.StatusFound)
-		p.errorLog(http.StatusFound, "empty input")
-		return
+	if *cfg.vnc == "" || *cfg.passwd != "" {
+		p.r.ParseForm()
+
+		serverNum := strings.Trim(p.r.PostFormValue("servernum"), " \r\n")
+		if serverNum == "" {
+			http.Redirect(p.w, p.r, *cfg.baseuri+"error.html", http.StatusFound)
+			p.errorLog(http.StatusFound, "empty input")
+			return
+		}
 	}
 
-	serverID, serverIP, err := getServerIPbyNum(serverNum)
+	if *cfg.vnc == "" {
+		serverID, serverIP, err = getServerIPbyNum(serverNum)
+	} else {
+		if *cfg.passwd == "" {
+			serverID, serverIP = *cfg.vnc, *cfg.vnc
+		} else {
+			err = checkLocalPass(*cfg.passwd, serverNum)
+			if err != nil {
+				http.Redirect(p.w, p.r, *cfg.baseuri+"error.html", http.StatusFound)
+				p.errorLog(http.StatusFound, "error password check: "+err.Error())
+				return
+			}
+		}
+		serverNum = "*****"
+	}
 
 	if err != nil {
 		http.Redirect(p.w, p.r, *cfg.baseuri+"panic.html", http.StatusFound)
@@ -66,6 +89,7 @@ func (p *Responder) GetAuthToken(dest string, serverIP string) string {
 		Peer: SplitHostPort(p.r.RemoteAddr)[0],
 		Real: p.getHeader("X-Real-IP", "UNKNOWN"),
 	}
+
 	if dest == "dest" {
 		authToken.Dest = fmt.Sprintf("%s:%d", serverIP, *cfg.vnc_port)
 	} else {
