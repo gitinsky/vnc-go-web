@@ -1,8 +1,8 @@
 package main // github.com/gitinsky/vnc-go-web
 
 import (
-	"regexp"
 	"encoding/base64"
+	"regexp"
 )
 
 var checkAuthTokenRegexp = regexp.MustCompile("^peer\\s+([^\\s]+)\\s+real\\s+([^\\s]+)\\s+((?:dest)|(?:retry))\\s+([^\\s]+)$")
@@ -17,7 +17,7 @@ func (p *Responder) CheckAuthToken() (string, string) {
 					return authParams[3], authParams[4]
 				}
 			}
-		}	
+		}
 	}
 	return "", ""
 }
