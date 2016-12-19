@@ -2,10 +2,11 @@ package main // github.com/gitinsky/vnc-go-web
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 var slidingPassword = NewSlidingPassword()
