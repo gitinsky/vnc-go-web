@@ -23,7 +23,7 @@ func (p *Responder) serveLogin() {
 	if *cfg.vnc == "" || *cfg.passwd != "" {
 		p.r.ParseForm()
 
-		serverNum := strings.Trim(p.r.PostFormValue("servernum"), " \r\n")
+		serverNum = strings.Trim(p.r.PostFormValue("servernum"), " \r\n")
 		if serverNum == "" {
 			http.Redirect(p.w, p.r, *cfg.baseuri+"error.html", http.StatusFound)
 			p.errorLog(http.StatusFound, "empty input")
@@ -34,16 +34,16 @@ func (p *Responder) serveLogin() {
 	if *cfg.vnc == "" {
 		serverID, serverIP, err = getServerIPbyNum(serverNum)
 	} else {
-		if *cfg.passwd == "" {
-			serverID, serverIP = *cfg.vnc, *cfg.vnc
-		} else {
-			err = checkLocalPass(*cfg.passwd, serverNum)
+		p.errorLog(0, "vnc backend provided")
+		if *cfg.passwd != "" {
+			err := checkLocalPass(*cfg.passwd, serverNum)
 			if err != nil {
 				http.Redirect(p.w, p.r, *cfg.baseuri+"error.html", http.StatusFound)
 				p.errorLog(http.StatusFound, "error password check: "+err.Error())
 				return
 			}
 		}
+		serverID, serverIP = *cfg.vnc, *cfg.vnc
 		serverNum = "*****"
 	}
 

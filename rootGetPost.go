@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+const (
+	indexURL = "/index.html"
+)
+
 type Responder struct {
 	w     http.ResponseWriter
 	r     *http.Request
