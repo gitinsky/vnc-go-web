@@ -1,0 +1,17 @@
+--- html/noVNC/vnc_auto.html.orig	2017-01-04 14:31:11.000000000 +0300
++++ html/noVNC/vnc_auto.html	2017-01-04 14:32:10.000000000 +0300
+@@ -203,12 +203,8 @@
+ 
+         function xvpInit(ver) {
+             var xvpbuttons;
+-            xvpbuttons = document.getElementById('noVNC_xvp_buttons');
+-            if (ver >= 1) {
+-                xvpbuttons.style.display = 'inline';
+-            } else {
+-                xvpbuttons.style.display = 'none';
+-            }
++            xvpbuttons = document.getElementById('noVNC_buttons');
++            xvpbuttons.style.display = 'none';
+         }
+ 
+         window.onscriptsload = function () {
